@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>라라레서피 매출 및 판매보고</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+  <div class="p-6 max-w-7xl mx-auto">
+    <header class="flex justify-between items-center mb-8 border-b border-gray-800 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold text-pink-400">✨ LALARECIPE 매출 대시보드</h1>
+        <p class="text-sm text-gray-400">Vercel 전용 독립 시스템</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span id="status-badge" class="text-xs px-3 py-1 rounded-full bg-yellow-600/30 text-yellow-300">
+          ⏳ 동기화 중...
+        </span>
+        <button onclick="loadData()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-xs rounded-lg transition border border-gray-700">
+          새로고침
+        </button>
+      </div>
+    </header>
+
+    <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <button onclick="switchTab('summary')" id="btn-summary" class="px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap bg-pink-600 text-white shadow-lg shadow-pink-600/30">📊 매출 요약</button>
+      <button onclick="switchTab('add')" id="btn-add" class="px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800">✏️ 매출 등록</button>
+      <button onclick="switchTab('products')" id="btn-products" class="px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800">📦 상품별 판매</button>
+    </div>
+
+    <!-- 1. 매출 요약 탭 -->
+    <div id="tab-summary" class="space-y-4">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">실시간 매출 요약 목록</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="border-b border-gray-800 text-gray-400 bg-gray-950/50">
+              <tr>
+                <th class="py-3 px-4">날짜</th>
+                <th class="py-3 px-4">채널</th>
+                <th class="py-3 px-4">카테고리</th>
+                <th class="py-3 px-4">상품명</th>
+                <th class="py-3 px-4 text-right">수량</th>
+                <th class="py-3 px-4 text-right">금액</th>
+                <th class="py-3 px-4 text-center">관리</th>
+              </tr>
+            </thead>
+            <tbody id="summary-tbody" class="divide-y divide-gray-800/60">
+              <tr><td colspan="7" class="py-12 text-center text-gray-500">데이터를 불러오는 중입니다...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 매출 등록 탭 -->
+    <div id="tab-add" class="hidden">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 max-w-2xl mx-auto shadow-xl">
+        <h3 class="text-lg font-semibold mb-6 text-gray-200">새로운 매출 데이터 직접 등록</h3>
+        <form onsubmit="handleSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">날짜</label>
+            <input type="date" id="f-date" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500" required />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">판매 채널</label>
+              <input type="text" id="f-channel" value="카페24" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500" required />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">카테고리</label>
+              <input type="text" id="f-category" value="유자라인" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500" required />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">상품명</label>
+            <input type="text" id="f-product" placeholder="예: 유자 비타 C 크림" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500" required />
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">판매 수량</label>
+              <input type="number" id="f-quantity" value="1" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500" required />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-400 mb-1">총 매출액 (원)</label>
+              <input type="number" id="f-amount" placeholder="예: 35000" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500" required />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-400 mb-1">비고 (선택)</label>
+            <input type="text" id="f-note" placeholder="특이사항 입력" class="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500" />
+          </div>
+          <button type="submit" class="w-full py-3 bg-pink-600 hover:bg-pink-500 text-white font-semibold rounded-xl shadow-lg shadow-pink-600/30 transition mt-4">
+            시스템에 즉시 등록하기
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 3. 상품별 판매 탭 -->
+    <div id="tab-products" class="hidden">
+      <div class="bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-xl">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">상품별 판매 현황</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-gray-300">
+            <thead class="border-b border-gray-800 text-gray-400 bg-gray-950/50">
+              <tr>
+                <th class="py-3 px-4">상품명</th>
+                <th class="py-3 px-4 text-right">판매 수량</th>
+                <th class="py-3 px-4 text-right">총 매출액</th>
+              </tr>
+            </thead>
+            <tbody id="products-tbody" class="divide-y divide-gray-800/60">
+              <tr><td colspan="3" class="py-12 text-center text-gray-500">데이터가 없습니다.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Vercel 자체 API 호출 경로
+    const API_URL = "/api/sales";
+
+    document.getElementById('f-date').valueAsDate = new Date();
+
+    function switchTab(tabName) {
+      ['summary', 'add', 'products'].forEach(t => {
+        document.getElementById('tab-' + t).classList.add('hidden');
+        document.getElementById('btn-' + t).className = "px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap bg-gray-900 text-gray-400 hover:bg-gray-800 border border-gray-800";
+      });
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+      document.getElementById('btn-' + tabName).className = "px-4 py-2 rounded-xl text-sm font-medium transition whitespace-nowrap bg-pink-600 text-white shadow-lg shadow-pink-600/30";
+    }
+
+    async function loadData() {
+      const badge = document.getElementById('status-badge');
+      badge.className = "text-xs px-3 py-1 rounded-full bg-yellow-600/30 text-yellow-300";
+      badge.innerText = "⏳ 동기화 중...";
+
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        renderSummary(data.sales_summary || []);
+        renderProducts(data.product_sales || []);
+        
+        badge.className = "text-xs px-3 py-1 rounded-full bg-green-600/30 text-green-300";
+        badge.innerText = "● Vercel 연동됨";
+      } catch (err) {
+        console.error(err);
+        badge.className = "text-xs px-3 py-1 rounded-full bg-red-600/30 text-red-300";
+        badge.innerText = "✕ 연동 실패";
+      }
+    }
+
+    function renderSummary(list) {
+      const tbody = document.getElementById('summary-tbody');
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="py-12 text-center text-gray-500">등록된 데이터가 없습니다.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(item => `
+        <tr class="hover:bg-gray-800/40 transition">
+          <td class="py-3 px-4">${item.date || '-'}</td>
+          <td class="py-3 px-4">${item.channel || '-'}</td>
+          <td class="py-3 px-4">${item.category || '-'}</td>
+          <td class="py-3 px-4 font-medium text-white">${item.product || '-'}</td>
+          <td class="py-3 px-4 text-right">${item.quantity || 0}</td>
+          <td class="py-3 px-4 text-right text-pink-400 font-semibold">${Number(item.amount || 0).toLocaleString()}원</td>
+          <td class="py-3 px-4 text-center">
+            <button onclick="deleteRow(${item.rowIndex})" class="px-2.5 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded text-xs transition">삭제</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderProducts(list) {
+      const tbody = document.getElementById('products-tbody');
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="py-12 text-center text-gray-500">상품별 데이터가 없습니다.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(item => `
+        <tr class="hover:bg-gray-800/40 transition">
+          <td class="py-3 px-4 font-medium text-white">${item.product || '-'}</td>
+          <td class="py-3 px-4 text-right">${item.quantity || 0}</td>
+          <td class="py-3 px-4 text-right text-pink-400 font-semibold">${Number(item.amount || 0).toLocaleString()}원</td>
+        </tr>
+      `).join('');
+    }
+
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const payload = {
+        action: 'add',
+        row: [
+          'ID_' + Date.now(),
+          document.getElementById('f-date').value,
+          document.getElementById('f-channel').value,
+          document.getElementById('f-category').value,
+          document.getElementById('f-product').value,
+          Number(document.getElementById('f-quantity').value),
+          Number(document.getElementById('f-amount').value),
+          document.getElementById('f-note').value
+        ]
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          alert('성공적으로 등록되었습니다!');
+          document.getElementById('f-product').value = '';
+          document.getElementById('f-amount').value = '';
+          document.getElementById('f-note').value = '';
+          switchTab('summary');
+          loadData();
+        } else {
+          alert('등록 실패');
+        }
+      } catch (err) {
+        alert('통신 오류가 발생했습니다.');
+      }
+    }
+
+    async function deleteRow(rowIndex) {
+      if (!confirm('정말 이 데이터를 삭제하시겠습니까?')) return;
+      const payload = {
+        action: 'delete',
+        rowIndex: rowIndex
+      };
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        if (result.status === 'success') {
+          alert('삭제되었습니다.');
+          loadData();
+        } else {
+          alert('삭제 실패');
+        }
+      } catch (err) {
+        alert('삭제 중 오류가 발생했습니다.');
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
